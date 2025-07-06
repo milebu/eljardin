@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ensaladas Disponibles</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .ensalada {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .ensalada h2 {
+      color: #e74c3c;
+      margin-top: 0;
+    }
+    .tipo {
+      display: inline-block;
+      background: #f1c40f;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .precio {
+      font-weight: bold;
+      color: #27ae60;
+      font-size: 18px;
+    }
+    .loading, .error {
+      text-align: center;
+      font-style: italic;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <h1>🥗 Ensaladas Disponibles</h1>
+  <div id="ensaladas-container">
+    <p class="loading">Cargando menú...</p>
+  </div>
+
+  <script>
+    // URL de tu API (reemplaza con la tuya si es diferente)
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwTihyaNxGaWc15SMTtUHEEYXpJCSuK7GS1hMnXmZh_jHCtx5805tKNPRLa8tMxOClO/exec';
+
+    // Función para mostrar las ensaladas
+    function mostrarEnsaladas(ensaladas) {
+      const container = document.getElementById('ensaladas-container');
+      
+      if (ensaladas.length === 0) {
+        container.innerHTML = '<p class="error">No hay ensaladas disponibles hoy</p>';
+        return;
+      }
+
+      container.innerHTML = ''; // Limpiar el mensaje de carga
+
+      ensaladas.forEach(ensalada => {
+        const div = document.createElement('div');
+        div.className = 'ensalada';
+        
+        // Si tiene tipo, mostrarlo como etiqueta
+        const tipoTag = ensalada.tipo 
+          ? `<span class="tipo">${ensalada.tipo}</span>` 
+          : '';
+        
+        div.innerHTML = `
+          ${tipoTag}
+          <h2>${ensalada.producto}</h2>
+          <p>${ensalada.ingredientes}</p>
+          <p class="precio">$${ensalada.precio}</p>
+        `;
+        
+        container.appendChild(div);
+      });
+    }
+
+    // Obtener datos de la API
+    fetch(API_URL)
+      .then(response => response.json())
+      .then(data => mostrarEnsaladas(data.ensaladas))
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('ensaladas-container').innerHTML = `
+          <p class="error">Error al cargar el menú. Recarga la página.</p>
+        `;
+      });
+  </script>
+</body>
+</html>
