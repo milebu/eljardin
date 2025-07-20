@@ -1,104 +1,889 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Ensaladas Disponibles</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
-      background-color: #f9f9f9;
-    }
-    h1 {
-      color: #2c3e50;
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .ensalada {
-      background: white;
-      padding: 20px;
-      margin-bottom: 20px;
-      border-radius: 10px;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-    }
-    .ensalada h2 {
-      color: #e74c3c;
-      margin-top: 0;
-    }
-    .tipo {
-      display: inline-block;
-      background: #f1c40f;
-      color: white;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-    .precio {
-      font-weight: bold;
-      color: #27ae60;
-      font-size: 18px;
-    }
-    .loading, .error {
-      text-align: center;
-      font-style: italic;
-      color: #7f8c8d;
-    }
-  </style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>El Jardín - Ensaladas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        /* Spinner styles */
+        #spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            min-height: 100px;
+        }
+
+        .spinner-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            animation: spin-slow 4s linear infinite;
+        }
+
+        .spinner-container span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+        }
+
+        .emoji:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg) translateY(-40px) rotate(0deg); }
+        .emoji:nth-child(2) { transform: translate(-50%, -50%) rotate(45deg) translateY(-40px) rotate(-45deg); }
+        .emoji:nth-child(3) { transform: translate(-50%, -50%) rotate(90deg) translateY(-40px) rotate(-90deg); }
+        .emoji:nth-child(4) { transform: translate(-50%, -50%) rotate(135deg) translateY(-40px) rotate(-135deg); }
+        .emoji:nth-child(5) { transform: translate(-50%, -50%) rotate(180deg) translateY(-40px) rotate(-180deg); }
+        .emoji:nth-child(6) { transform: translate(-50%, -50%) rotate(225deg) translateY(-40px) rotate(-225deg); }
+        .emoji:nth-child(7) { transform: translate(-50%, -50%) rotate(270deg) translateY(-40px) rotate(-270deg); }
+        .emoji:nth-child(8) { transform: translate(-50%, -50%) rotate(315deg) translateY(-40px) rotate(-315deg); }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Estilos para el cuadro de diálogo de copia */
+        #copyDialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none; /* Permite hacer clic a través del diálogo cuando no está visible */
+        }
+        #copyDialog.show {
+            opacity: 1;
+            pointer-events: auto; /* Habilita los eventos de clic cuando está visible */
+        }
+
+        /* Estilo para las palomitas (checkmark) de los checkboxes */
+        .ingredient-checkbox {
+            accent-color: green; /* Cambia el color de la palomita a verde */
+        }
+    </style>
 </head>
-<body>
-  <h1>🥗 Ensaladas Disponibles</h1>
-  <div id="ensaladas-container">
-    <p class="loading">Cargando menú...</p>
-  </div>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <header class="bg-green-600 text-white p-4 text-center">
+        <h1 class="text-3xl font-bold">El Jardín 🥗</h1>
+        <p class="text-sm">Comé sano, viví mejor</p>
+    </header>
+    <main class="p-4">
+        <h2 class="text-xl font-semibold mb-4">Elegí tu ensalada favorita o armala como quieras!</h2>
 
-  <script>
-    // URL de tu API (reemplaza con la tuya si es diferente)
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwTihyaNxGaWc15SMTtUHEEYXpJCSuK7GS1hMnXmZh_jHCtx5805tKNPRLa8tMxOClO/exec';
+        <div id="spinner">
+            <div class="spinner-container">
+                <span class="emoji">🍎</span>
+                <span class="emoji">🍊</span>
+                <span class="emoji">🍋</span>
+                <span class="emoji">🥝</span>
+                <span class="emoji">🥦</span>
+                <span class="emoji">🥕</span>
+                <span class="emoji">🥬</span>
+                <span class="emoji">🧅</span>
+            </div>
+            <p class="text-lg mt-4">Cargando...</p>
+        </div>
 
-    // Función para mostrar las ensaladas
-    function mostrarEnsaladas(ensaladas) {
-      const container = document.getElementById('ensaladas-container');
-      
-      if (ensaladas.length === 0) {
-        container.innerHTML = '<p class="error">No hay ensaladas disponibles hoy</p>';
-        return;
-      }
+        <div id="salad-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 
-      container.innerHTML = ''; // Limpiar el mensaje de carga
+        <div class="mt-6 bg-white shadow rounded p-4 flex flex-col items-center justify-center text-center">
+            <h3 class="font-semibold text-lg mb-2">Tu ensalada a gusto!</h3>
+            <button id="openCustomModal" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition">
+                Crear
+            </button>
+        </div>
+    </main>
 
-      ensaladas.forEach(ensalada => {
-        const div = document.createElement('div');
-        div.className = 'ensalada';
-        
-        // Si tiene tipo, mostrarlo como etiqueta
-        const tipoTag = ensalada.tipo 
-          ? `<span class="tipo">${ensalada.tipo}</span>` 
-          : '';
-        
-        div.innerHTML = `
-          ${tipoTag}
-          <h2>${ensalada.producto}</h2>
-          <p>${ensalada.ingredientes}</p>
-          <p class="precio">$${ensalada.precio}</p>
-        `;
-        
-        container.appendChild(div);
-      });
-    }
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-lg shadow-md max-w-md w-full relative">
+            <button id="closeModal" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">✕
+            </button>
+            <h3 class="text-lg font-bold mb-4">Completa tu pedido</h3>
+            <p class="text-sm text-gray-600 mb-4">Seleccionaste: <span id="selectedSaladName" class="font-semibold text-green-700"></span> <span id="selectedIngredientsList" class="text-xs text-gray-500 italic block mt-1"></span> </p>
+            <form id="orderForm" class="space-y-3">
+                <input type="hidden" name="saladName" id="saladName"/>
+                <input type="hidden" name="customIngredients" id="customIngredients"/>
+                <div>
+                    <label class="block text-sm">Nombre</label>
+                    <input type="text" name="name" placeholder="Tu nombre" class="w-full border px-2 py-1 rounded focus:ring-2 focus:ring-green-300" required/>
+                </div>
+                <div>
+                    <label class="block text-sm">Apellido</label>
+                    <input type="text" name="lastName" placeholder="Tu apellido" class="w-full border px-2 py-1 rounded focus:ring-2 focus:ring-green-300" required/>
+                </div>
+                <div>
+                    <label class="block text-sm">Dirección</label>
+                    <input type="text" name="address" placeholder="Calle, número y barrio" class="w-full border px-2 py-1 rounded focus:ring-2 focus:ring-green-300" required/>
+                </div>
+                <div>
+                    <label class="block text-sm">Nota</label>
+                    <textarea name="note" placeholder="Agregue cualquier información de utilizad para localizar el lugar, ejemplo: Calles, Fachada, Institución o comercio" class="w-full border px-2 py-1 rounded focus:ring-2 focus:ring-green-300" rows="4"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm">Fecha de entrega</label>
+                    <select id="deliveryDate" name="deliveryDate" class="w-full border px-2 py-1 rounded focus:ring-2 focus:ring-green-300" required>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-sm">Desde</label>
+                        <input type="time" name="startTime" class="w-full border px-2 py-1 rounded focus:ring-2 focus:ring-green-300" required/>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm">Hasta</label>
+                        <input type="time" name="endTime" class="w-full border px-2 py-1 rounded focus:ring-2 focus:ring-green-300" required/>
+                    </div>
+                </div>
+                <div class="text-right pt-2 flex justify-end gap-2">
+                    <button type="button" id="copyDataBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">
+                        Copiar datos
+                    </button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition">
+                        Enviar por WhatsApp 💬
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="copyDialog"></div>
+    <div id="customModal" class="fixed inset-0 bg-black bg-opacity-50 hidden p-4 overflow-auto z-50">
+        <div class="bg-white p-6 rounded-lg shadow-md max-w-4xl w-full mx-auto flex flex-col md:flex-row gap-6 relative max-h-screen overflow-y-auto">
+            <div class="md:w-2/3 space-y-4">
+                <h3 class="text-lg font-bold mb-4">Elegí los ingredientes (máximo 6), y al finalizar la cantidad.</h3>
+                <div id="ingredientCategories" class="space-y-4"></div>
+            </div>
+            <div class="md:w-1/3 sticky top-6 self-start space-y-4">
+                <div>
+                    <h4 class="font-semibold mb-2 text-gray-700">Bandeja Visual</h4>
+                    <div id="saladTray" class="grid grid-cols-5 gap-0 w-24 min-h-[80px] mx-auto">
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                        <div class="cell w-6 h-6 bg-white border border-gray-300"></div>
+                    </div>
+                </div>
+                <div id="selectedIngredientsWithProportionsContainer">
+                    <h4 class="font-semibold mb-2 text-gray-700">Composición elegida</h4>
+                    <div id="selectedIngredientsWithProportions" class="border border-dashed border-gray-300 p-4 rounded bg-gray-50 space-y-2 min-h-20">
+                    </div>
+                    <div id="totalPrice" class="mt-4 text-right text-lg font-bold text-gray-800">Total: $0.00</div>
+                </div>
+                <div id="totalPercentMessage" class="mt-2 text-right text-sm font-medium text-gray-600"></div>
+                <div id="missingProportionsWarning" class="mt-2 text-red-600 text-sm text-right hidden">
+                    Aún no has elegido las proporciones de cada ingrediente.
+                </div>
+                <div class="flex justify-end mt-2 gap-2">
+                    <button id="cancelCustom" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">Cancelar
+                    </button>
+                    <button id="acceptCustom" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="copyDialog"></div>
+    <footer class="bg-green-600 text-white p-4 text-center mt-6">
+        <p>© 2025 El Jardín. Todos los derechos reservados.</p>
+    </footer>
+    <script>
+        // Global variables to store fetched data
+        let fetchedSalads = [];
+        let fetchedCategories = {};
+        let fetchedIngredientsPrices = {};
 
-    // Obtener datos de la API
-    fetch(API_URL)
-      .then(response => response.json())
-      .then(data => mostrarEnsaladas(data.ensaladas))
-      .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('ensaladas-container').innerHTML = `
-          <p class="error">Error al cargar el menú. Recarga la página.</p>
-        `;
-      });
-  </script>
+        // Elementos DOM
+        const spinner = document.getElementById('spinner');
+        const saladList = document.getElementById("salad-list");
+        const modal = document.getElementById("modal");
+        const saladNameInput = document.getElementById("saladName");
+        const selectedSaladName = document.getElementById("selectedSaladName");
+        const selectedIngredientsList = document.getElementById("selectedIngredientsList");
+        const customModal = document.getElementById("customModal");
+        const ingredientCategoriesDiv = document.getElementById("ingredientCategories");
+        const selectedIngredientsWithProportionsContainer = document.getElementById("selectedIngredientsWithProportionsContainer");
+        const selectedIngredientsWithProportionsDiv = document.getElementById("selectedIngredientsWithProportions");
+        const acceptCustomBtn = document.getElementById("acceptCustom");
+        const totalPercentMessage = document.getElementById("totalPercentMessage");
+        const missingProportionsWarning = document.getElementById("missingProportionsWarning");
+        const saladTray = document.getElementById("saladTray");
+        const cells = [...document.querySelectorAll("#saladTray .cell")];
+        const totalPriceElement = document.getElementById("totalPrice");
+        const copyDataBtn = document.getElementById("copyDataBtn"); // Nuevo botón
+        const copyDialog = document.getElementById("copyDialog"); // Cuadro de diálogo de copia
+        let selectedIngredients = [];
+
+        // Mostrar spinner
+        function showSpinner() {
+            spinner.style.display = 'flex';
+            saladList.style.display = 'none'; // Oculta la lista mientras carga
+            document.getElementById('openCustomModal').style.display = 'none'; // Oculta el botón
+        }
+
+        // Ocultar spinner
+        function hideSpinner() {
+            spinner.style.display = 'none';
+            saladList.style.display = 'grid'; // Muestra la lista
+            document.getElementById('openCustomModal').style.display = 'flex'; // Muestra el botón
+        }
+
+        // === Renderizar Tarjetas de Ensaladas ===
+        function renderSaladCards() {
+            saladList.innerHTML = ""; // Limpiar tarjetas existentes
+            if (fetchedSalads.length === 0) {
+                saladList.innerHTML = '<p class="text-gray-500">No hay ensaladas disponibles.</p>';
+                return;
+            }
+            fetchedSalads.forEach((salad) => {
+                const card = document.createElement("div");
+                card.className = "bg-white shadow rounded p-4 flex flex-col justify-between";
+                
+                let imageUrlHtml = '';
+                if (salad.imageUrl) {
+                    const finalImageUrl = salad.imageUrl;
+                    imageUrlHtml = `<img src="${finalImageUrl}" alt="${salad.producto}" class="w-full h-32 object-cover rounded-md mb-2">`;
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-lg font-semibold">${salad.producto}</h4>
+                            <span class="font-bold text-lg text-green-700">$${salad.precio || '0.00'}</span>
+                        </div>
+                        ${imageUrlHtml}
+                        <p class="text-xs text-gray-500">${salad.ingredientes}</p>
+                    </div>
+                    <button class="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded mt-2" data-salad="${salad.producto}">
+                        Elegir
+                    </button>`;
+                saladList.appendChild(card);
+            });
+        }
+
+        // === Abrir Modal con Nombre de Ensalada ===
+        saladList.addEventListener("click", (e) => {
+            if (e.target.dataset.salad) {
+                const saladName = e.target.dataset.salad;
+                saladNameInput.value = saladName;
+                selectedSaladName.textContent = saladName;
+                selectedIngredientsList.textContent = "";
+                document.getElementById("customIngredients").value = "";
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+                document.body.style.overflow = "hidden";
+            }
+        });
+
+        // === Cerrar Modal Principal ===
+        document.getElementById("closeModal").onclick = () => {
+            modal.classList.add("hidden");
+            document.body.style.overflow = "";
+        };
+
+        // === Mostrar Modal Personalizado ===
+        document.getElementById("openCustomModal").addEventListener("click", () => {
+            renderIngredientCategories();
+            updateCheckboxes();
+            selectedIngredientsWithProportionsContainer.classList.add("hidden");
+            selectedIngredientsWithProportionsDiv.innerHTML = "";
+            resetCells();
+            selectedIngredients = [];
+            renderSelectedIngredientsWithProportions();
+            customModal.classList.remove("hidden");
+            customModal.classList.add("flex");
+        });
+
+        function resetCells() {
+            cells.forEach(cell => cell.className = "cell w-6 h-6 bg-white border border-gray-300");
+        }
+
+        // === Rellenar fechas sin domingos ===
+        function populateDeliveryDates() {
+            const select = document.getElementById("deliveryDate");
+            const today = new Date();
+
+            for (let i = 0; i <= 7; i++) {
+                const nextDay = new Date(today.getTime() + i * 86400000);
+                const dayOfWeek = nextDay.getDay(); // 0 = domingo
+
+                if (dayOfWeek === 0) continue;
+
+                const formattedDate = nextDay.toISOString().split('T')[0];
+                const option = document.createElement("option");
+                option.value = formattedDate;
+                option.textContent = `${formattedDate} (${getDayName(nextDay)})`;
+                select.appendChild(option);
+            }
+
+            const firstOption = select.options[0];
+            select.value = firstOption ? firstOption.value : '';
+        }
+
+        function getDayName(date) {
+            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            return days[date.getDay()];
+        }
+
+        // Función para generar el mensaje del pedido
+        function generateOrderMessage(form) {
+            const name = form.name.value.trim();
+            const lastName = form.lastName.value.trim();
+            const saladName = form.saladName.value.trim();
+            const address = form.address.value.trim();
+            const note = form.note.value.trim(); // Obtener el valor del campo Nota
+            const startTime = form.startTime.value;
+            const endTime = form.endTime.value;
+            const deliveryDate = form.deliveryDate.value;
+            const customIngredients = form.customIngredients.value.trim();
+
+            let message = `Hola! quiero realizar el siguiente pedido: 🥗
+👤 Nombre: ${name} ${lastName}
+🥗 Ensalada: ${saladName}${customIngredients ? `
+🧾 Ingredientes: ${customIngredients}` : ""}
+🏡 Dirección: ${address}`;
+
+            if (note) { // Si el campo Nota no está vacío, agregarlo al mensaje
+                message += `
+📝 Nota: ${note}`;
+            }
+
+            message += `
+📅 Fecha de entrega: ${deliveryDate}
+⏰ Franja Horaria: ${startTime} - ${endTime}`;
+
+            return message;
+        }
+
+        // === Manejo del Formulario (Enviar por WhatsApp) ===
+        document.getElementById("orderForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const name = form.name.value.trim();
+            const lastName = form.lastName.value.trim();
+            const saladName = form.saladName.value.trim();
+            const address = form.address.value.trim();
+            const startTime = form.startTime.value;
+            const endTime = form.endTime.value;
+            const deliveryDate = form.deliveryDate.value;
+
+            if (!name || !lastName || !saladName || !address || !startTime || !endTime || !deliveryDate) {
+                alert("Por favor completa todos los campos.");
+                return;
+            }
+
+            if (startTime >= endTime) {
+                alert("La hora final debe ser mayor a la inicial.");
+                return;
+            }
+
+            const now = new Date();
+            const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+            const selectedDate = new Date(`${deliveryDate}T${startTime}:00`);
+            const isSameDay = deliveryDate === now.toISOString().split('T')[0];
+
+            if (isSameDay && selectedDate < oneHourLater) {
+                alert("Los pedidos deben realizarse con al menos una hora de anticipación.");
+                return;
+            }
+
+            const startHour = parseInt(startTime.split(':')[0]);
+            if (startHour < 11 || startHour > 21) {
+                alert("Los pedidos solo pueden programarse entre las 11:00 y las 21:00.");
+                return;
+            }
+
+            const message = generateOrderMessage(form); // Utiliza la nueva función
+
+            // Asegúrate de que el número de teléfono sea válido y sin caracteres especiales (solo números)
+            const whatsappNumber = "2235299964"; // Reemplaza con tu número de WhatsApp
+            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, '_blank');
+            modal.classList.add("hidden");
+            document.body.style.overflow = "";
+            form.reset();
+        });
+
+        // === Funcionalidad del botón "Copiar datos" ===
+        copyDataBtn.addEventListener("click", () => {
+            const form = document.getElementById("orderForm");
+            const message = generateOrderMessage(form);
+
+            navigator.clipboard.writeText(message).then(() => {
+                showCopyDialog();
+            }).catch(err => {
+                console.error('Error al copiar el texto: ', err);
+                alert('No se pudo copiar el texto. Por favor, inténtalo manualmente.');
+            });
+        });
+
+        // Mostrar cuadro de diálogo de copia
+        function showCopyDialog() {
+            copyDialog.textContent = 'Ahora podes pegar los datos de tú pedido en tu Whatsapp y enviarlos a El Jardín (2235299964).';
+            copyDialog.classList.add('show');
+            setTimeout(() => {
+                copyDialog.classList.remove('show');
+            }, 10000); // 10 segundos
+        }
+
+        // === Renderizar Categorías de Ingredientes ===
+        function renderIngredientCategories() {
+            ingredientCategoriesDiv.innerHTML = "";
+            if (Object.keys(fetchedCategories).length === 0) {
+                ingredientCategoriesDiv.innerHTML = '<p class="text-gray-500">No hay categorías de ingredientes disponibles.</p>';
+                return;
+            }
+            for (let category in fetchedCategories) {
+                const container = document.createElement("div");
+                container.className = "mb-4";
+                const title = document.createElement("h4");
+                title.className = "font-semibold mb-2";
+                title.innerText = category;
+                container.appendChild(title);
+                const ul = document.createElement("ul");
+                ul.className = "space-y-2";
+                fetchedCategories[category].forEach(ingredient => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" value="${ingredient}" class="ingredient-checkbox w-4 h-4" id="ingredient-${ingredient.replace(/\s/g, '-')}" ${selectedIngredients.includes(ingredient) ? "checked" : ""}>
+                            <label for="ingredient-${ingredient.replace(/\s/g, '-')}" class="cursor-pointer">${ingredient}</label>
+                        </div>`;
+                    ul.appendChild(li);
+                });
+                container.appendChild(ul);
+                ingredientCategoriesDiv.appendChild(container);
+            }
+            updateCheckboxes();
+        }
+
+        // === Actualización de casillas de verificación ===
+        function updateCheckboxes() {
+            const checkboxes = document.querySelectorAll(".ingredient-checkbox");
+            const isMaxIngredientsSelected = selectedIngredients.length >= 6;
+
+            checkboxes.forEach(cb => {
+                if (!cb.checked) { // Si el checkbox no está actualmente seleccionado
+                    cb.disabled = isMaxIngredientsSelected; // Deshabilita si el máximo de ingredientes ha sido seleccionado
+                } else {
+                    cb.disabled = false; // Siempre habilita los checkboxes seleccionados
+                }
+            });
+        }
+
+        ingredientCategoriesDiv.addEventListener("change", (e) => {
+            if (e.target.classList.contains("ingredient-checkbox")) {
+                const checkbox = e.target;
+                const ingredient = checkbox.value;
+
+                if (checkbox.checked) {
+                    if (selectedIngredients.length >= 6) {
+                        checkbox.checked = false; // Evita seleccionar más de 6
+                        alert("Solo puedes elegir hasta 6 ingredientes.");
+                        return;
+                    }
+                    selectedIngredients.push(ingredient);
+                } else {
+                    selectedIngredients = selectedIngredients.filter(i => i !== ingredient);
+                }
+
+                updateCheckboxes();
+                renderSelectedIngredientsWithProportions();
+            }
+        });
+
+        // === Proporciones ===
+        const proportions = {};
+        for (let i = 0; i <= 25; i++) {
+            proportions[`${i}/25`] = i / 25;
+        }
+        const BASE_PROPORTION = 25;
+
+        function getIngredientPrice(ingredientName) {
+            return fetchedIngredientsPrices[ingredientName] || 0;
+        }
+
+        function updateIngredientTotalPrice(ingredientName, proportionValue, priceElement) {
+            const amount = proportionValue ? parseInt(proportionValue.split("/")[0]) : 0;
+            const pricePerPortion = getIngredientPrice(ingredientName);
+            const total = amount * pricePerPortion;
+            priceElement.textContent = `$${total.toFixed(0)}`;
+            updateOverallTotalPrice();
+        }
+
+        function updateOverallTotalPrice() {
+            let overallTotal = 0;
+            selectedIngredientsWithProportionsDiv.querySelectorAll(".ingredient-item").forEach(itemDiv => {
+                const select = itemDiv.querySelector("select");
+                const ingredientName = select.dataset.ingredient;
+                const amount = select.value ? parseInt(select.value.split("/")[0]) : 0;
+                const pricePerPortion = getIngredientPrice(ingredientName);
+                overallTotal += amount * pricePerPortion;
+            });
+            totalPriceElement.textContent = `Total: $${overallTotal.toFixed(0)}`;
+        }
+
+
+        function renderSelectedIngredientsWithProportions() {
+            const currentValues = {};
+            selectedIngredientsWithProportionsDiv.querySelectorAll("select").forEach(select => {
+                currentValues[select.dataset.ingredient] = select.value;
+            });
+
+            selectedIngredientsWithProportionsDiv.innerHTML = "";
+            totalPriceElement.textContent = `Total: $0.00`;
+
+            selectedIngredients.forEach((ingredientName) => {
+                const div = document.createElement("div");
+                div.className = "flex items-center justify-between ingredient-item";
+
+                // Create the remove button
+                const removeBtn = document.createElement("button");
+                removeBtn.className = "remove-ingredient-btn text-red-500 hover:text-red-700 text-sm font-bold mr-2"; /* Cambiado a text-sm */
+                removeBtn.textContent = "✕";
+                removeBtn.dataset.ingredient = ingredientName; // Store ingredient name for easy lookup
+
+                // Event listener for the remove button
+                removeBtn.addEventListener("click", () => {
+                    // Remove from selectedIngredients array
+                    selectedIngredients = selectedIngredients.filter(i => i !== ingredientName);
+
+                    // Deselect the corresponding checkbox
+                    const checkbox = document.getElementById(`ingredient-${ingredientName.replace(/\s/g, '-')}`);
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
+
+                    // Update UI
+                    updateCheckboxes();
+                    renderSelectedIngredientsWithProportions();
+                });
+
+                const ingredientNameSpan = document.createElement("span");
+                ingredientNameSpan.className = "text-sm flex-grow"; // Use flex-grow to push select to the right
+                ingredientNameSpan.textContent = ingredientName;
+
+                const select = document.createElement("select");
+                select.className = "border px-2 py-1 rounded ml-2 w-32";
+                select.dataset.ingredient = ingredientName;
+
+                const defaultOption = document.createElement("option");
+                defaultOption.value = "0/25";
+                defaultOption.textContent = "0/25";
+                select.appendChild(defaultOption);
+
+                Object.entries(proportions).forEach(([key, value]) => {
+                    if (key !== "0/25") {
+                        const option = document.createElement("option");
+                        option.value = key;
+                        option.textContent = `${key}`;
+                        select.appendChild(option);
+                    }
+                });
+
+                // Restore previous selection or set to default
+                if (currentValues[ingredientName]) {
+                    select.value = currentValues[ingredientName];
+                } else {
+                    select.value = "0/25";
+                }
+
+                const priceSpan = document.createElement("span");
+                priceSpan.className = "text-sm font-bold w-20 text-center";
+                priceSpan.textContent = `$${getIngredientPrice(ingredientName) * (parseInt(select.value.split("/")[0]) || 0)}`;
+
+                select.addEventListener("change", () => {
+                    updateSelectOptions();
+                    validateProportions();
+                    updateIngredientTotalPrice(ingredientName, select.value, priceSpan);
+                });
+
+                div.appendChild(removeBtn); // Add remove button first
+                div.appendChild(ingredientNameSpan);
+                div.appendChild(select);
+                div.appendChild(priceSpan);
+                selectedIngredientsWithProportionsDiv.appendChild(div);
+
+                updateIngredientTotalPrice(ingredientName, select.value, priceSpan);
+            });
+
+            selectedIngredientsWithProportionsContainer.classList.toggle("hidden", selectedIngredients.length === 0);
+            saladTray.classList.remove("hidden");
+            updateSelectOptions(); // Llamada explícita para inicializar las opciones
+            validateProportions();
+            updateOverallTotalPrice();
+        }
+
+        function calculateTotalPortions() {
+            const selects = selectedIngredientsWithProportionsDiv.querySelectorAll("select");
+            return [...selects].reduce((acc, select) => {
+                const value = select.value;
+                const portion = value ? parseInt(value.split("/")[0]) : 0;
+                return acc + portion;
+            }, 0);
+        }
+
+        function validateProportions() {
+            const selects = selectedIngredientsWithProportionsDiv.querySelectorAll("select");
+            let totalPortions = calculateTotalPortions();
+            let missingSelection = false;
+
+            selects.forEach(select => {
+                if (!select.value || select.value === "0/25") {
+                    missingSelection = true;
+                }
+            });
+
+            if (selectedIngredients.length === 0) {
+                totalPercentMessage.textContent = "";
+                missingProportionsWarning.classList.add("hidden");
+                acceptCustomBtn.disabled = true;
+                return;
+            }
+
+            const allSelectedZero = [...selects].every(select => select.value === "0/25");
+
+            if (missingSelection || allSelectedZero) {
+                missingProportionsWarning.classList.remove("hidden");
+                acceptCustomBtn.disabled = true;
+            } else {
+                missingProportionsWarning.classList.add("hidden");
+            }
+
+            if (totalPortions > BASE_PROPORTION) {
+                totalPercentMessage.textContent = `Superaste el límite de ${BASE_PROPORTION} porciones (${totalPortions}/${BASE_PROPORTION}).`;
+                totalPercentMessage.className = "mt-2 text-right text-sm font-medium text-red-600";
+                acceptCustomBtn.disabled = true;
+            } else if (totalPortions < BASE_PROPORTION) {
+                totalPercentMessage.textContent = `Falta completar las ${BASE_PROPORTION} porciones (${totalPortions}/${BASE_PROPORTION}).`;
+                totalPercentMessage.className = "mt-2 text-right text-sm font-medium text-orange-500";
+                acceptCustomBtn.disabled = true;
+            } else {
+                totalPercentMessage.textContent = `¡Perfecto! Proporciones correctas (${totalPortions}/${BASE_PROPORTION}).`;
+                totalPercentMessage.className = "mt-2 text-right text-sm font-medium text-green-600";
+                acceptCustomBtn.disabled = false;
+            }
+
+            updateTray();
+            updateOverallTotalPrice();
+            updateCheckboxes();
+        }
+
+        // === Actualizar Bandeja Visual ===
+        function updateTray() {
+            cells.forEach(cell => cell.className = "cell w-6 h-6 bg-white border border-gray-300");
+
+            const selects = selectedIngredientsWithProportionsDiv.querySelectorAll("select");
+            const colors = ["bg-red-200", "bg-yellow-200", "bg-blue-200", "bg-green-200", "bg-purple-200", "bg-pink-200"];
+            let filled = 0;
+
+            selects.forEach((select, index) => {
+                const value = select.value;
+                if (!value) return;
+
+                const amount = parseInt(value.split("/")[0], 10);
+                if (isNaN(amount) || amount === 0) return;
+
+                for (let i = 0; i < amount && filled < BASE_PROPORTION; i++) {
+                    if (cells[filled]) {
+                        cells[filled].classList.remove("bg-white", "bg-red-200", "bg-yellow-200", "bg-blue-200", "bg-green-200", "bg-purple-200", "bg-pink-200");
+                        cells[filled].classList.add(colors[index % colors.length]);
+                    }
+                    filled++;
+                }
+            });
+        }
+
+        // === Confirmar Ensalada Personalizada ===
+        document.getElementById("acceptCustom").addEventListener("click", () => {
+            if (selectedIngredients.length === 0) {
+                alert("Por favor selecciona al menos 1 ingrediente.");
+                return;
+            }
+
+            const selects = selectedIngredientsWithProportionsDiv.querySelectorAll("select");
+            const fullIngredientsForDisplay = [];
+            const fullIngredientsForWhatsapp = [];
+            let hasUnselectedOrZero = false;
+
+            selects.forEach(select => {
+                if (!select.value || select.value === "0/25") {
+                    hasUnselectedOrZero = true;
+                }
+                const ingredient = select.dataset.ingredient;
+                const proportion = select.value;
+                fullIngredientsForDisplay.push(`${ingredient} (${proportion})`);
+                fullIngredientsForWhatsapp.push(`${ingredient} (${proportion})`);
+            });
+
+            if (hasUnselectedOrZero) {
+                alert("Por favor selecciona proporciones para todos los ingredientes, asegurándote de que no sean 0/25.");
+                return;
+            }
+
+            if (calculateTotalPortions() !== BASE_PROPORTION) {
+                alert(`Debes completar exactamente ${BASE_PROPORTION} porciones para tu ensalada personalizada.`);
+                return;
+            }
+
+            saladNameInput.value = "Personalizada";
+            selectedSaladName.textContent = "Personalizada";
+            selectedIngredientsList.textContent = ` (${fullIngredientsForDisplay.join(", ")})`;
+            document.getElementById("customIngredients").value = fullIngredientsForWhatsapp.join(", ");
+            customModal.classList.add("hidden");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        });
+
+        // === Cerrar Modal Personalizado ===
+        document.getElementById("cancelCustom").addEventListener("click", () => {
+            customModal.classList.add("hidden");
+            selectedIngredients = [];
+            updateCheckboxes();
+            renderSelectedIngredientsWithProportions();
+        });
+
+        // === Función para actualizar opciones según espacio disponible ===
+        function updateSelectOptions() {
+            const selects = selectedIngredientsWithProportionsDiv.querySelectorAll("select");
+            const currentValues = {};
+            selects.forEach(select => {
+                currentValues[select.dataset.ingredient] = select.value;
+            });
+
+            const totalPortionsCurrentlySelected = calculateTotalPortions();
+
+            selects.forEach((select) => {
+                const ingredient = select.dataset.ingredient;
+                const currentValue = currentValues[ingredient];
+                const oldVal = currentValue ? parseInt(currentValue.split("/")[0]) : 0;
+
+                const remainingSpaceIfThisIsZero = BASE_PROPORTION - (totalPortionsCurrentlySelected - oldVal);
+
+                select.innerHTML = "";
+
+                const defaultOption = document.createElement("option");
+                defaultOption.value = "0/25";
+                defaultOption.textContent = "0/25";
+                select.appendChild(defaultOption);
+
+                for (let i = 1; i <= BASE_PROPORTION; i++) {
+                    if (i <= remainingSpaceIfThisIsZero) {
+                        const option = document.createElement("option");
+                        option.value = `${i}/25`;
+                        option.textContent = `${i}/25`;
+                        select.appendChild(option);
+                    }
+                }
+
+                let bestMatch = "0/25";
+                if (currentValue && [...select.options].some(opt => opt.value === currentValue)) {
+                    bestMatch = currentValue;
+                } else if (oldVal > 0) {
+                    for (let i = oldVal; i >= 0; i--) {
+                        const potentialValue = `${i}/25`;
+                        if ([...select.options].some(opt => opt.value === potentialValue)) {
+                            bestMatch = potentialValue;
+                            break;
+                        }
+                    }
+                }
+                select.value = bestMatch;
+            });
+
+            validateProportions();
+            updateOverallTotalPrice();
+        }
+
+        // === Evento change en selects para recargar opciones ===
+        selectedIngredientsWithProportionsDiv.addEventListener("change", () => {
+            updateSelectOptions();
+            validateProportions();
+        });
+
+        // Fetch data from Google Apps Script URL
+        document.addEventListener('DOMContentLoaded', function () {
+            showSpinner();
+
+            fetch('https://script.google.com/macros/s/AKfycbzI-lAvYjCrjzY5ub-KSTQMHMhR90e0Zdyrnt-yNiPpPCgCiQqiz8SJm2mlCa-6YNYX/exec')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    fetchedSalads = data.ensaladas.filter(salad =>
+                        salad.disponible && (salad.disponible.toLowerCase() === 'x' || salad.disponible.toLowerCase() === 'X')
+                    );
+
+                    const availableIngredients = data.ingredientes.filter(ingredient =>
+                        ingredient.disponible && (ingredient.disponible.toLowerCase() === 'x' || ingredient.disponible.toLowerCase() === 'X')
+                    );
+
+                    fetchedCategories = {};
+                    fetchedIngredientsPrices = {};
+                    availableIngredients.forEach(ingredient => {
+                        const className = ingredient.clase;
+                        if (!fetchedCategories[className]) {
+                            fetchedCategories[className] = [];
+                        }
+                        fetchedCategories[className].push(ingredient.ingrediente);
+                        fetchedIngredientsPrices[ingredient.ingrediente] = ingredient.precio;
+                    });
+
+                    renderSaladCards();
+                    hideSpinner();
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    saladList.innerHTML = '<p class="text-red-600">No se pudieron cargar las ensaladas. Inténtalo de nuevo más tarde o verifica la consola del navegador para más detalles.</p>';
+                    ingredientCategoriesDiv.innerHTML = '<p class="text-red-600">No se pudieron cargar los ingredientes.</p>';
+                    hideSpinner();
+                });
+
+            populateDeliveryDates();
+        });
+    </script>
 </body>
 </html>
